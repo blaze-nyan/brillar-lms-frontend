@@ -1,5 +1,7 @@
-"use client"
-import { useRouter } from "next/navigation"
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Container,
   Paper,
@@ -12,20 +14,30 @@ import {
   InputAdornment,
   IconButton,
   CircularProgress,
-} from "@mui/material"
-import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material"
-import { Formik, Form, Field, FieldArray } from "formik"
-import * as Yup from "yup"
-import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { registerUser } from "@/lib/features/auth/authSlice"
-import Link from "next/link"
+} from "@mui/material";
+import { Add as AddIcon, Delete as DeleteIcon } from "@mui/icons-material";
+import { Formik, Form, Field, FieldArray } from "formik";
+import * as Yup from "yup";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { registerUser, clearError } from "@/lib/features/auth/authSlice";
+import Link from "next/link";
 
-const supervisors = ["Ko Kaung San Phoe", "Ko Kyaw Swa Win", "Dimple", "Budiman"]
+const supervisors = [
+  "Ko Kaung San Phoe",
+  "Ko Kyaw Swa Win",
+  "Dimple",
+  "Budiman",
+];
 
 const validationSchema = Yup.object({
-  name: Yup.string().required("Name is required"),
+  name: Yup.string()
+    .required("Name is required")
+    .min(3, "Name must be at least 3 characters")
+    .max(50, "Name must be at most 50 characters"),
   email: Yup.string().email("Invalid email").required("Email is required"),
-  password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
+  password: Yup.string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required"),
   confirmPassword: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
     .required("Confirm password is required"),
@@ -35,32 +47,48 @@ const validationSchema = Yup.object({
   education: Yup.string().required("Education is required"),
   address: Yup.string().required("Address is required"),
   supervisor: Yup.string().required("Supervisor is required"),
-})
+});
 
 export default function RegisterPage() {
-  const dispatch = useAppDispatch()
-  const router = useRouter()
-  const { isLoading, error } = useAppSelector((state) => state.auth)
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { isLoading, error, isAuthenticated, user } = useAppSelector(
+    (state) => state.auth
+  );
 
-  const handleSubmit = async (values: any) => {
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Redirect to user dashboard after successful registration
+      router.push("/user-dashboard");
+    }
+  }, [isAuthenticated, user, router]);
+
+  const handleSubmit = async (values: any, { setSubmitting }: any) => {
     try {
-      const { confirmPassword, ...userData } = values
-      const result = await dispatch(registerUser(userData)).unwrap()
+      const { confirmPassword, ...userData } = values;
+      const result = await dispatch(registerUser(userData)).unwrap();
 
       if (result) {
-        router.push("/dashboard")
+        // Navigation will be handled by the useEffect above
       }
-    } catch (error) {
-      // Error is handled by the slice
+    } catch (error: any) {
+      console.error("Registration failed:", error);
+      // Error is already handled by the slice
+    } finally {
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-emerald-100 py-8 px-4">
       <Container maxWidth="md">
         <Paper elevation={8} className="p-8 rounded-2xl">
           <Box className="text-center mb-8">
-            <Typography variant="h4" component="h1" className="font-bold text-gray-800 mb-2">
+            <Typography
+              variant="h4"
+              component="h1"
+              className="font-bold text-gray-800 mb-2"
+            >
               Create Account
             </Typography>
             <Typography variant="body1" className="text-gray-600">
@@ -69,7 +97,11 @@ export default function RegisterPage() {
           </Box>
 
           {error && (
-            <Alert severity="error" className="mb-4">
+            <Alert
+              severity="error"
+              className="mb-4"
+              onClose={() => dispatch(clearError())}
+            >
               {error}
             </Alert>
           )}
@@ -88,7 +120,15 @@ export default function RegisterPage() {
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
-            {({ errors, touched, values, handleChange, handleBlur, setFieldValue }) => (
+            {({
+              errors,
+              touched,
+              values,
+              handleChange,
+              handleBlur,
+              setFieldValue,
+              isSubmitting,
+            }) => (
               <Form className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <Field
@@ -101,6 +141,7 @@ export default function RegisterPage() {
                     onBlur={handleBlur}
                     error={touched.name && Boolean(errors.name)}
                     helperText={touched.name && errors.name}
+                    disabled={isLoading || isSubmitting}
                   />
 
                   <Field
@@ -114,6 +155,7 @@ export default function RegisterPage() {
                     onBlur={handleBlur}
                     error={touched.email && Boolean(errors.email)}
                     helperText={touched.email && errors.email}
+                    disabled={isLoading || isSubmitting}
                   />
                 </div>
 
@@ -129,6 +171,7 @@ export default function RegisterPage() {
                     onBlur={handleBlur}
                     error={touched.password && Boolean(errors.password)}
                     helperText={touched.password && errors.password}
+                    disabled={isLoading || isSubmitting}
                   />
 
                   <Field
@@ -140,13 +183,21 @@ export default function RegisterPage() {
                     value={values.confirmPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    error={touched.confirmPassword && Boolean(errors.confirmPassword)}
-                    helperText={touched.confirmPassword && errors.confirmPassword}
+                    error={
+                      touched.confirmPassword && Boolean(errors.confirmPassword)
+                    }
+                    helperText={
+                      touched.confirmPassword && errors.confirmPassword
+                    }
+                    disabled={isLoading || isSubmitting}
                   />
                 </div>
 
                 <Box>
-                  <Typography variant="subtitle1" className="mb-2 font-semibold">
+                  <Typography
+                    variant="subtitle1"
+                    className="mb-2 font-semibold"
+                  >
                     Phone Numbers
                   </Typography>
                   <FieldArray name="phoneNumber">
@@ -158,13 +209,29 @@ export default function RegisterPage() {
                               fullWidth
                               label={`Phone Number ${index + 1}`}
                               value={phone}
-                              onChange={(e) => setFieldValue(`phoneNumber.${index}`, e.target.value)}
-                              error={touched.phoneNumber?.[index] && Boolean(errors.phoneNumber?.[index])}
-                              helperText={touched.phoneNumber?.[index] && errors.phoneNumber?.[index]}
+                              onChange={(e) =>
+                                setFieldValue(
+                                  `phoneNumber.${index}`,
+                                  e.target.value
+                                )
+                              }
+                              error={
+                                touched.phoneNumber?.[index] &&
+                                Boolean(errors.phoneNumber?.[index])
+                              }
+                              helperText={
+                                touched.phoneNumber?.[index] &&
+                                errors.phoneNumber?.[index]
+                              }
+                              disabled={isLoading || isSubmitting}
                               InputProps={{
                                 endAdornment: values.phoneNumber.length > 1 && (
                                   <InputAdornment position="end">
-                                    <IconButton onClick={() => remove(index)} size="small">
+                                    <IconButton
+                                      onClick={() => remove(index)}
+                                      size="small"
+                                      disabled={isLoading || isSubmitting}
+                                    >
                                       <DeleteIcon />
                                     </IconButton>
                                   </InputAdornment>
@@ -179,6 +246,7 @@ export default function RegisterPage() {
                           startIcon={<AddIcon />}
                           onClick={() => push("")}
                           className="mt-2"
+                          disabled={isLoading || isSubmitting}
                         >
                           Add Phone Number
                         </Button>
@@ -199,6 +267,7 @@ export default function RegisterPage() {
                   onBlur={handleBlur}
                   error={touched.education && Boolean(errors.education)}
                   helperText={touched.education && errors.education}
+                  disabled={isLoading || isSubmitting}
                 />
 
                 <Field
@@ -213,6 +282,7 @@ export default function RegisterPage() {
                   onBlur={handleBlur}
                   error={touched.address && Boolean(errors.address)}
                   helperText={touched.address && errors.address}
+                  disabled={isLoading || isSubmitting}
                 />
 
                 <Field
@@ -226,6 +296,7 @@ export default function RegisterPage() {
                   onBlur={handleBlur}
                   error={touched.supervisor && Boolean(errors.supervisor)}
                   helperText={touched.supervisor && errors.supervisor}
+                  disabled={isLoading || isSubmitting}
                 >
                   {supervisors.map((supervisor) => (
                     <MenuItem key={supervisor} value={supervisor}>
@@ -239,10 +310,14 @@ export default function RegisterPage() {
                   fullWidth
                   variant="contained"
                   size="large"
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                   className="py-3 text-lg font-semibold bg-green-600 hover:bg-green-700"
                 >
-                  {isLoading ? <CircularProgress size={24} color="inherit" /> : "Create Account"}
+                  {isLoading || isSubmitting ? (
+                    <CircularProgress size={24} color="inherit" />
+                  ) : (
+                    "Create Account"
+                  )}
                 </Button>
               </Form>
             )}
@@ -251,7 +326,10 @@ export default function RegisterPage() {
           <Box className="mt-6 text-center">
             <Typography variant="body2" className="text-gray-600">
               Already have an account?{" "}
-              <Link href="/login" className="text-green-600 hover:text-green-800 font-semibold">
+              <Link
+                href="/login"
+                className="text-green-600 hover:text-green-800 font-semibold"
+              >
                 Sign in here
               </Link>
             </Typography>
@@ -259,5 +337,5 @@ export default function RegisterPage() {
         </Paper>
       </Container>
     </div>
-  )
+  );
 }

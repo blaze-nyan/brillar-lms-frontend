@@ -1,9 +1,8 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Container,
   Paper,
@@ -15,55 +14,83 @@ import {
   ToggleButton,
   ToggleButtonGroup,
   CircularProgress,
-} from "@mui/material"
-import { Formik, Form, Field } from "formik"
-import * as Yup from "yup"
-import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { loginUser, clearError } from "@/lib/features/auth/authSlice"
-import Link from "next/link"
+} from "@mui/material";
+import { Formik, Form, Field } from "formik";
+import * as Yup from "yup";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { loginUser, clearError } from "@/lib/features/auth/authSlice";
+import Link from "next/link";
 
 const validationSchema = Yup.object({
   email: Yup.string().email("Invalid email").required("Email is required"),
-  password: Yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
-})
+  password: Yup.string()
+    .min(6, "Password must be at least 6 characters")
+    .required("Password is required"),
+});
 
 export default function LoginPage() {
-  const [userType, setUserType] = useState<"admin" | "user">("user")
-  const dispatch = useAppDispatch()
-  const router = useRouter()
-  const { isLoading, error } = useAppSelector((state) => state.auth)
+  const [userType, setUserType] = useState<"admin" | "user">("user");
+  const dispatch = useAppDispatch();
+  const router = useRouter();
+  const { isLoading, error, isAuthenticated, user } = useAppSelector(
+    (state) => state.auth
+  );
 
-  const handleUserTypeChange = (event: React.MouseEvent<HTMLElement>, newUserType: "admin" | "user" | null) => {
-    if (newUserType !== null) {
-      setUserType(newUserType)
-      dispatch(clearError())
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      // Redirect based on user role
+      if (user.role === "admin") {
+        router.push("/admin-dashboard");
+      } else {
+        router.push("/user-dashboard");
+      }
     }
-  }
+  }, [isAuthenticated, user, router]);
 
-  const handleSubmit = async (values: { email: string; password: string }) => {
+  const handleUserTypeChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newUserType: "admin" | "user" | null
+  ) => {
+    if (newUserType !== null) {
+      setUserType(newUserType);
+      dispatch(clearError());
+    }
+  };
+
+  const handleSubmit = async (
+    values: { email: string; password: string },
+    { setSubmitting }: any
+  ) => {
     try {
       const result = await dispatch(
         loginUser({
           email: values.email,
           password: values.password,
           role: userType,
-        }),
-      ).unwrap()
+        })
+      ).unwrap();
 
       if (result) {
-        router.push("/dashboard")
+        // Navigation will be handled by the useEffect above
       }
-    } catch (error) {
-      // Error is handled by the slice
+    } catch (error: any) {
+      console.error("Login failed:", error);
+      // Error is already handled by the slice
+    } finally {
+      setSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <Container maxWidth="sm">
         <Paper elevation={8} className="p-8 rounded-2xl">
           <Box className="text-center mb-8">
-            <Typography variant="h4" component="h1" className="font-bold text-gray-800 mb-2">
+            <Typography
+              variant="h4"
+              component="h1"
+              className="font-bold text-gray-800 mb-2"
+            >
               Leave Management System
             </Typography>
             <Typography variant="body1" className="text-gray-600">
@@ -89,7 +116,11 @@ export default function LoginPage() {
           </Box>
 
           {error && (
-            <Alert severity="error" className="mb-4">
+            <Alert
+              severity="error"
+              className="mb-4"
+              onClose={() => dispatch(clearError())}
+            >
               {error}
             </Alert>
           )}
@@ -99,7 +130,14 @@ export default function LoginPage() {
             validationSchema={validationSchema}
             onSubmit={handleSubmit}
           >
-            {({ errors, touched, values, handleChange, handleBlur }) => (
+            {({
+              errors,
+              touched,
+              values,
+              handleChange,
+              handleBlur,
+              isSubmitting,
+            }) => (
               <Form className="space-y-4">
                 <Field
                   as={TextField}
@@ -113,6 +151,7 @@ export default function LoginPage() {
                   error={touched.email && Boolean(errors.email)}
                   helperText={touched.email && errors.email}
                   className="mb-4"
+                  disabled={isLoading || isSubmitting}
                 />
 
                 <Field
@@ -127,6 +166,7 @@ export default function LoginPage() {
                   error={touched.password && Boolean(errors.password)}
                   helperText={touched.password && errors.password}
                   className="mb-6"
+                  disabled={isLoading || isSubmitting}
                 />
 
                 <Button
@@ -134,10 +174,10 @@ export default function LoginPage() {
                   fullWidth
                   variant="contained"
                   size="large"
-                  disabled={isLoading}
+                  disabled={isLoading || isSubmitting}
                   className="py-3 text-lg font-semibold bg-blue-600 hover:bg-blue-700"
                 >
-                  {isLoading ? (
+                  {isLoading || isSubmitting ? (
                     <CircularProgress size={24} color="inherit" />
                   ) : (
                     `Sign In as ${userType === "admin" ? "Admin" : "User"}`
@@ -151,7 +191,10 @@ export default function LoginPage() {
             <Box className="mt-6 text-center">
               <Typography variant="body2" className="text-gray-600">
                 Don't have an account?{" "}
-                <Link href="/register" className="text-blue-600 hover:text-blue-800 font-semibold">
+                <Link
+                  href="/register"
+                  className="text-blue-600 hover:text-blue-800 font-semibold"
+                >
                   Sign up here
                 </Link>
               </Typography>
@@ -160,5 +203,5 @@ export default function LoginPage() {
         </Paper>
       </Container>
     </div>
-  )
+  );
 }

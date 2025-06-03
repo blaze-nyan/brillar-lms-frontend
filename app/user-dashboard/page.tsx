@@ -1,55 +1,67 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { Typography, Box, Grid } from "@mui/material"
-import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { fetchLeaveBalance, fetchLeaveHistory, setCurrentLeave } from "@/lib/features/leave/leaveSlice"
-import { UserLayout } from "@/components/layout/user-layout"
-import { LeaveBalanceCard } from "@/components/leave-balance-card"
-import { LeaveRequestForm } from "@/components/leave-request-form"
-import { CurrentLeaveStatus } from "@/components/current-leave-status"
-import { UserProfileCard } from "@/components/user-profile-card"
-import { LeaveHistory } from "@/components/leave-history"
-import { CardSkeleton } from "@/components/loading/table-skeleton"
+import { useEffect } from "react";
+import { Typography, Box, Grid } from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import {
+  fetchLeaveBalance,
+  fetchLeaveHistory,
+  setCurrentLeave,
+} from "@/lib/features/leave/leaveSlice";
+import { UserLayout } from "@/components/layout/user-layout";
+import { LeaveBalanceCard } from "@/components/leave-balance-card";
+import { LeaveRequestForm } from "@/components/leave-request-form";
+import { CurrentLeaveStatus } from "@/components/current-leave-status";
+import { UserProfileCard } from "@/components/user-profile-card";
+import { LeaveHistory } from "@/components/leave-history";
+import { CardSkeleton } from "@/components/loading/table-skeleton";
 
 export default function UserDashboardPage() {
-  const dispatch = useAppDispatch()
-  const { user } = useAppSelector((state) => state.auth)
-  const { balance, currentLeave, leaveHistory, isLoading } = useAppSelector((state) => state.leave)
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+  const { balance, currentLeave, leaveHistory, isLoading } = useAppSelector(
+    (state) => state.leave
+  );
 
   useEffect(() => {
-    // Fetch leave data when component mounts
-    dispatch(fetchLeaveBalance())
-    dispatch(fetchLeaveHistory())
+    if (user) {
+      // Fetch leave data when component mounts
+      dispatch(fetchLeaveBalance());
+      dispatch(fetchLeaveHistory());
 
-    // Mock current leave data - in real app, this would come from API
-    dispatch(
-      setCurrentLeave({
-        id: "1",
-        leaveType: "annualLeave",
-        startDate: "2024-01-15",
-        endDate: "2024-01-19",
-        daysRemaining: 2,
-        totalDays: 5,
-      }),
-    )
-  }, [dispatch])
+      // Mock current leave data - in real app, this would come from API
+      dispatch(
+        setCurrentLeave({
+          id: "1",
+          leaveType: "annualLeave",
+          startDate: "2024-01-15",
+          endDate: "2024-01-19",
+          daysRemaining: 2,
+          totalDays: 5,
+        })
+      );
+    }
+  }, [dispatch, user]);
 
   if (!user) {
-    return null
+    return null;
   }
 
-  // Mock leave balance data - in real app, this would come from API
+  // Mock leave balance data if not loaded yet
   const mockBalance = balance || {
     annualLeave: { total: 10, used: 3, remaining: 7 },
     sickLeave: { total: 14, used: 2, remaining: 12 },
     casualLeave: { total: 5, used: 1, remaining: 4 },
-  }
+  };
 
   return (
     <UserLayout>
       <Box className="mb-8">
-        <Typography variant="h4" component="h1" className="font-bold text-gray-800 mb-2">
+        <Typography
+          variant="h4"
+          component="h1"
+          className="font-bold text-gray-800 mb-2"
+        >
           Employee Dashboard
         </Typography>
         <Typography variant="body1" className="text-gray-600">
@@ -122,5 +134,5 @@ export default function UserDashboardPage() {
         </Grid>
       </Grid>
     </UserLayout>
-  )
+  );
 }
