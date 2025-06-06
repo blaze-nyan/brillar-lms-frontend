@@ -268,9 +268,21 @@ const authSlice = createSlice({
       })
       .addCase(loginUser.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.data.admin || action.payload.data.user;
-        state.accessToken = action.payload.data.accessToken;
-        state.refreshToken = action.payload.data.refreshToken;
+
+        // Handle both admin and user responses
+        const responseData = action.payload.data;
+        const user = responseData.admin || responseData.user;
+
+        // Ensure role is set correctly
+        if (responseData.admin) {
+          user.role = "admin";
+        } else if (responseData.user) {
+          user.role = "user";
+        }
+
+        state.user = user;
+        state.accessToken = responseData.accessToken;
+        state.refreshToken = responseData.refreshToken;
         state.isAuthenticated = true;
         state.error = null;
       })

@@ -53,11 +53,26 @@ const initialState: AdminState = {
     total: 0,
     totalPages: 0,
   },
-  leaveStatistics: null,
   isLoading: false,
   isSubmitting: false,
   error: null,
   successMessage: null,
+  leaveStatistics: {
+    totalUsers: 0,
+    usersOnLeave: 0,
+    averageLeaveUsage: {
+      annualLeave: 0,
+      sickLeave: 0,
+      casualLeave: 0,
+    },
+    leaveDistributionByType: {
+      annualLeave: 0,
+      sickLeave: 0,
+      casualLeave: 0,
+    },
+    leaveDistributionBySupervisor: {},
+    monthlyLeaveDistribution: [],
+  },
 };
 
 // Async thunks for API calls

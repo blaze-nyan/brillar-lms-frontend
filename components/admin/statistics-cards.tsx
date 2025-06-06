@@ -1,27 +1,44 @@
-"use client"
+"use client";
 
-import { useEffect } from "react"
-import { Grid, Paper, Typography, Box, Skeleton } from "@mui/material"
+import { useEffect } from "react";
+import { Grid, Paper, Typography, Box, Skeleton } from "@mui/material";
 import {
   People as PeopleIcon,
   EventBusy as EventBusyIcon,
   BarChart as BarChartIcon,
   PieChart as PieChartIcon,
-} from "@mui/icons-material"
-import { useAppDispatch, useAppSelector } from "@/lib/hooks"
-import { fetchLeaveStatistics } from "@/lib/features/admin/adminSlice"
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement } from "chart.js"
-import { Bar, Pie } from "react-chartjs-2"
+} from "@mui/icons-material";
+import { useAppDispatch, useAppSelector } from "@/lib/hooks";
+import { fetchLeaveStatistics } from "@/lib/features/admin/adminSlice";
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement,
+} from "chart.js";
+import { Bar, Pie } from "react-chartjs-2";
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, ArcElement)
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+  ArcElement
+);
 
 export function StatisticsCards() {
-  const dispatch = useAppDispatch()
-  const { leaveStatistics, isLoading } = useAppSelector((state) => state.admin)
+  const dispatch = useAppDispatch();
+  const { leaveStatistics, isLoading } = useAppSelector((state) => state.admin);
 
   useEffect(() => {
-    dispatch(fetchLeaveStatistics())
-  }, [dispatch])
+    dispatch(fetchLeaveStatistics());
+  }, [dispatch]);
 
   // Bar chart options and data
   const barOptions = {
@@ -36,18 +53,23 @@ export function StatisticsCards() {
         text: "Monthly Leave Distribution",
       },
     },
-  }
+  };
 
   const barData = {
-    labels: leaveStatistics?.monthlyLeaveDistribution.map((item) => item.month) || [],
+    labels:
+      leaveStatistics?.monthlyLeaveDistribution?.map((item) => item.month) ||
+      [],
     datasets: [
       {
         label: "Leave Requests",
-        data: leaveStatistics?.monthlyLeaveDistribution.map((item) => item.count) || [],
+        data:
+          leaveStatistics?.monthlyLeaveDistribution?.map(
+            (item) => item.count
+          ) || [],
         backgroundColor: "rgba(53, 162, 235, 0.5)",
       },
     ],
-  }
+  };
 
   // Pie chart options and data
   const pieOptions = {
@@ -62,7 +84,7 @@ export function StatisticsCards() {
         text: "Leave Distribution by Type",
       },
     },
-  }
+  };
 
   const pieData = {
     labels: ["Annual Leave", "Sick Leave", "Casual Leave"],
@@ -75,19 +97,31 @@ export function StatisticsCards() {
               leaveStatistics.leaveDistributionByType.casualLeave,
             ]
           : [],
-        backgroundColor: ["rgba(255, 99, 132, 0.5)", "rgba(54, 162, 235, 0.5)", "rgba(75, 192, 192, 0.5)"],
-        borderColor: ["rgba(255, 99, 132, 1)", "rgba(54, 162, 235, 1)", "rgba(75, 192, 192, 1)"],
+        backgroundColor: [
+          "rgba(255, 99, 132, 0.5)",
+          "rgba(54, 162, 235, 0.5)",
+          "rgba(75, 192, 192, 0.5)",
+        ],
+        borderColor: [
+          "rgba(255, 99, 132, 1)",
+          "rgba(54, 162, 235, 1)",
+          "rgba(75, 192, 192, 1)",
+        ],
         borderWidth: 1,
       },
     ],
-  }
+  };
 
   // Supervisor pie chart
   const supervisorPieData = {
-    labels: leaveStatistics ? Object.keys(leaveStatistics.leaveDistributionBySupervisor) : [],
+    labels: leaveStatistics
+      ? Object.keys(leaveStatistics.leaveDistributionBySupervisor)
+      : [],
     datasets: [
       {
-        data: leaveStatistics ? Object.values(leaveStatistics.leaveDistributionBySupervisor) : [],
+        data: leaveStatistics
+          ? Object.values(leaveStatistics.leaveDistributionBySupervisor)
+          : [],
         backgroundColor: [
           "rgba(255, 99, 132, 0.5)",
           "rgba(54, 162, 235, 0.5)",
@@ -103,7 +137,7 @@ export function StatisticsCards() {
         borderWidth: 1,
       },
     ],
-  }
+  };
 
   const supervisorPieOptions = {
     ...pieOptions,
@@ -114,7 +148,7 @@ export function StatisticsCards() {
         text: "Leave Distribution by Supervisor",
       },
     },
-  }
+  };
 
   return (
     <Box sx={{ mb: 4 }}>
@@ -230,7 +264,8 @@ export function StatisticsCards() {
                 <Skeleton width={60} height={40} />
               ) : (
                 <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-                  {leaveStatistics?.averageLeaveUsage.annualLeave.toFixed(1) || 0}
+                  {leaveStatistics?.averageLeaveUsage.annualLeave.toFixed(1) ||
+                    0}
                 </Typography>
               )}
             </Box>
@@ -305,11 +340,15 @@ export function StatisticsCards() {
             {isLoading ? (
               <Skeleton variant="rectangular" height="100%" />
             ) : (
-              <Pie options={supervisorPieOptions} data={supervisorPieData} height="100%" />
+              <Pie
+                options={supervisorPieOptions}
+                data={supervisorPieData}
+                height="100%"
+              />
             )}
           </Paper>
         </Grid>
       </Grid>
     </Box>
-  )
+  );
 }

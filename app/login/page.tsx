@@ -70,12 +70,9 @@ export default function LoginPage() {
         })
       ).unwrap();
 
-      if (result) {
-        // Navigation will be handled by the useEffect above
-      }
+      // The redirect will be handled by useEffect
     } catch (error: any) {
       console.error("Login failed:", error);
-      // Error is already handled by the slice
     } finally {
       setSubmitting(false);
     }

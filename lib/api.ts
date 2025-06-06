@@ -125,7 +125,7 @@ export const userAPI = {
 };
 
 export const leaveAPI = {
-  getBalance: (token: string) => apiCall("/api/leave/balance", { token }),
+  getBalance: (token: string) => apiCall("/api/leave/balance", { token }), // Remove /auth
 
   requestLeave: (token: string, leaveData: any) =>
     apiCall("/api/leave/request", {
@@ -157,4 +157,19 @@ export const leaveAPI = {
     }),
 
   getStatistics: (token: string) => apiCall("/api/leave/statistics", { token }),
+
+  // Add missing endpoints
+  getLeaveHistory: (token: string, params: any = {}) => {
+    const queryParams = new URLSearchParams();
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) queryParams.append(key, String(value));
+    });
+    return apiCall(`/api/leave/history?${queryParams.toString()}`, { token });
+  },
+
+  cancelLeaveRequest: (token: string, requestId: string) =>
+    apiCall(`/api/leave/cancel/${requestId}`, {
+      method: "POST",
+      token,
+    }),
 };
