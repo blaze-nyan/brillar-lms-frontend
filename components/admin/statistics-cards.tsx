@@ -90,13 +90,13 @@ export function StatisticsCards() {
     labels: ["Annual Leave", "Sick Leave", "Casual Leave"],
     datasets: [
       {
-        data: leaveStatistics
+        data: leaveStatistics?.leaveDistributionByType
           ? [
-              leaveStatistics.leaveDistributionByType.annualLeave,
-              leaveStatistics.leaveDistributionByType.sickLeave,
-              leaveStatistics.leaveDistributionByType.casualLeave,
+              leaveStatistics.leaveDistributionByType.annualLeave || 0,
+              leaveStatistics.leaveDistributionByType.sickLeave || 0,
+              leaveStatistics.leaveDistributionByType.casualLeave || 0,
             ]
-          : [],
+          : [0, 0, 0],
         backgroundColor: [
           "rgba(255, 99, 132, 0.5)",
           "rgba(54, 162, 235, 0.5)",
